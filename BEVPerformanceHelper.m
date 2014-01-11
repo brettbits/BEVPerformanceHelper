@@ -3,7 +3,7 @@
 //  Freq Peek
 //
 //  Created by Brett Neely <sourcecode@bitsevolving.com> on 9/20/13.
-//  Distributed under the MIT License -- see LICENSE file for details.
+//  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
 //
 
 #import "BEVPerformanceHelper.h"
