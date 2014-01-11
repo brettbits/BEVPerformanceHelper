@@ -1,6 +1,5 @@
 //
 //  BEVPerformanceHelper.h
-//  Freq Peek
 //
 //  Created by Brett Neely <sourcecode@bitsevolving.com> on 9/20/13.
 //  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
