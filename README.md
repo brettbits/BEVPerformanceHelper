@@ -5,6 +5,8 @@ Objective-C class for measuring and tracking performance (currently focused on t
 
 Example usage:
 
+```
+
 BEVPerformanceHelper *ph = [BEVPerformanceHelper sharedInstance];
 NSString *someTest = @"someTest";
 [ph prepareToMeasureWithIdentifier:someTest];
@@ -20,3 +22,4 @@ NSString *someBlockTest = @"someBlockTest";
 
 NSTimeInterval t1 = [ph getNewestTimedMeasurementForIdentifier:someTest];
 NSTimeInterval t2 = [ph getNewestTimedMeasurementForIdentifier:someBlockTest];
+```
