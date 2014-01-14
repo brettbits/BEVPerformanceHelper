@@ -81,7 +81,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     self.measurements = nil;
 }
 
-#pragma mark Public interface - start and stop
+#pragma mark Prepare, start, and stop
 
 // BUG: A caller can possibly reuse an identifier by simply calling prepareToMeasureWithIdentifier: more than once
 - (void)prepareToMeasureWithIdentifier:(NSString *)identifier
@@ -157,8 +157,10 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
             [self assertMismatchedIdentifierExpected:self.activeIdentifier actual:identifier];
         } else {
             NSNumber *onceTokenNumber = [self.stopOnceTokens objectForKey:identifier];
-            if (nil == onceTokenNumber) [self assertUnrecognizedIdentifier:identifier];
-            if (nil != onceTokenNumber) {
+            if (nil == onceTokenNumber) {
+                // This code path is theoretically impossible and not covered by unit testing
+                [self assertUnrecognizedIdentifier:identifier];
+            } else {
                 dispatch_once_t onceToken = [onceTokenNumber longValue];
                 dispatch_once(&onceToken, ^{
                     NSTimeInterval measurement = [stopDate timeIntervalSinceDate:self.startDate];
@@ -281,6 +283,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     if ([self useFileStorage] && [[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
         self.measurements = [[NSMutableDictionary alloc] initWithContentsOfFile:plistPath];
     } else if (nil == self.measurements) {
+        // This code is not covered by unit testing
         self.measurements = [[NSMutableDictionary alloc] init];
     }
     if (![[self.measurements allKeys] containsObject:identifier]) {
@@ -312,21 +315,26 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 - (void)recordMeasurement:(NSTimeInterval)measurement forIdentifier:(NSString *)identifier
 {
     NSNumber *onceTokenNumber = [self.stopOnceTokens objectForKey:identifier];
-    if (nil == onceTokenNumber) [self assertUnrecognizedIdentifier:identifier];
-    if (nil != onceTokenNumber) {
+    if (nil == onceTokenNumber) {
+        // This code is not covered by unit testing
+        [self assertUnrecognizedIdentifier:identifier];
+    } else {
         dispatch_once_t onceToken = [onceTokenNumber longValue];
         dispatch_once(&onceToken, ^{
             [self beginAccessingFileDataWithIdentifier:identifier addIdentifierIfMissing:YES];
             
             NSMutableArray *results = [[self.measurements objectForKey:identifier] mutableCopy];
             if (nil == results) {
+                // This code is not covered by unit testing
                 [self assertNoMeasurementsForIdentifier:identifier];
             } else {
                 [results addObject:[NSNumber numberWithDouble:measurement]];
                 NSInteger count = results.count;
                 if (count > self.numberOfResultsToPersist) {
+                    // This code is not covered by unit testing
                     NSInteger difference = count - self.numberOfResultsToPersist;
                     for (NSInteger i = 0; i < difference; i++) {
+                        // This code is not covered by unit testing
                         [results removeObjectAtIndex:i];
                     }
                 }
@@ -345,6 +353,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 {
     NSMutableArray *results = [self.measurements objectForKey:identifier];
     if (nil == results) {
+        // This code is not covered by unit testing
         [self assertNoMeasurementsForIdentifier:identifier];
     } else {
         NSTimeInterval fastest = CGFLOAT_MAX;
@@ -369,29 +378,36 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
         
         if (results.count >= self.minimumResultsForEvaluation) {
             if (thisMeasurement == fastest) {
+                // This code is not covered by unit testing
                 NSLog(@"New fastest measurement");
             }
             if (thisMeasurement == slowest) {
+                // This code is not covered by unit testing
                 NSLog(@"New slowest measurement"); // Breakpoint recommended here
             }
 
             stdDev = [self standardDeviationForMeasurementsWithIdentifier:identifier];
             if (stdDev > average) {
+                // This code is not covered by unit testing
                 NSLog(@"Standard deviation exceeds average");
             }
 
             BOOL rejectNewestMeasurement = NO;
             if ([self result:thisMeasurement exceedsCount:3 standardDeviation:stdDev fromAverage:average]) {
+                // This code is not covered by unit testing
                 NSLog(@"Measurement exceeds three standard deviations"); // Breakpoint recommended here
                 rejectNewestMeasurement = YES;
             } else if ([self result:thisMeasurement exceedsCount:2 standardDeviation:stdDev fromAverage:average]) {
+                // This code is not covered by unit testing
                 NSLog(@"Measurement exceeds two standard deviations"); // Breakpoint recommended here
                 rejectNewestMeasurement = YES;
             } else if ([self result:thisMeasurement exceedsCount:1 standardDeviation:stdDev fromAverage:average]) {
+                // This code is not covered by unit testing
                 NSLog(@"Measurement exceeds one standard deviation"); // Breakpoint recommended here
             }
             
             if (rejectNewestMeasurement) {
+                // This code is not covered by unit testing
                 NSLog(@"This measurement has been rejected");
                 [results removeLastObject];
                 [self.measurements setObject:results forKey:identifier];
@@ -410,6 +426,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     CGFloat lowThreshold = average - (stdDev * (CGFloat)count);
     CGFloat highThreshold = average + (stdDev * (CGFloat)count);
     if ((lowThreshold > result) || (highThreshold < result)) {
+        // This code is not covered by unit testing
         return YES;
     }
     return NO;
@@ -418,22 +435,26 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 - (CGFloat)standardDeviationForMeasurementsWithIdentifier:(NSString *)identifier
 {
     NSArray *results = [self.measurements objectForKey:identifier];
-    if (nil == results) [self assertNoMeasurementsForIdentifier:identifier];
-    
-    CGFloat sum = 0.0f;
-    for (NSNumber *result in results) {
-        sum += result.doubleValue;
-    }
+    CGFloat stdDeviation = CGFLOAT_MIN;
+    if (nil == results) {
+        // This code is not covered by unit testing
+        [self assertNoMeasurementsForIdentifier:identifier];
+    } else {
+        CGFloat sum = 0.0f;
+        for (NSNumber *result in results) {
+            sum += result.doubleValue;
+        }
 
-    CGFloat count = (CGFloat)results.count;
-    CGFloat average = sum / count;
+        CGFloat count = (CGFloat)results.count;
+        CGFloat average = sum / count;
 
-    CGFloat squaredSum = 0.0f; // variable needs better name
-    for (NSNumber *result in results) {
-        squaredSum += pow(result.doubleValue - average, 2);
+        CGFloat squaredSum = 0.0f; // variable needs better name
+        for (NSNumber *result in results) {
+            squaredSum += pow(result.doubleValue - average, 2);
+        }
+        
+        stdDeviation = sqrt(squaredSum / count);
     }
-    
-    CGFloat stdDeviation = sqrt(squaredSum / count);
     
     return stdDeviation;
 }

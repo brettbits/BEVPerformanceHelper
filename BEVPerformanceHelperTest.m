@@ -1,6 +1,5 @@
 //
 //  BEVPerformanceHelperTest.m
-//  Freq Peek
 //
 //  Created by Brett Neely <sourcecode@bitsevolving.com> on 9/30/13.
 //  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
@@ -284,6 +283,37 @@
 - (void)testRecordUntimedMeasurementNilIdentifier
 {
     XCTAssertThrows([self.ph recordUntimedMeasurement:0.2f forIdentifier:nil], @"");
+}
+
+- (void)testGetNewestUntimed
+{
+    NSString *identifier = [self uuid];
+    CGFloat expectedResult = 0.44f;
+    [self.ph recordUntimedMeasurement:expectedResult forIdentifier:identifier];
+    CGFloat actualResult = CGFLOAT_MIN;
+    XCTAssertNoThrow(actualResult = [self.ph getNewestUntimedMeasurementForIdentifier:identifier], @"");
+    XCTAssertEqual(expectedResult, actualResult, @"");
+}
+
+- (void)testGetNewestUntimedNilIdentifier
+{
+    XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:nil], @"");
+}
+
+- (void)testGetNewestUntimedDuringMeasurement
+{
+    NSString *id1 = [self uuid];
+    NSString *id2 = [self uuid];
+    [self.ph prepareToMeasureWithIdentifier:id1];
+    [self.ph startWithIdentifier:id1];
+    XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:id2], @"");
+    [self.ph stopWithIdentifier:id1];
+}
+
+- (void)testGetNewestUntimedNoResults
+{
+    NSString *identifier = [self uuid];
+    XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:identifier], @"");
 }
 
 @end
