@@ -35,18 +35,23 @@ extern NSString * const BEVIgnoredIdentifier;
 - (void)stopWithIdentifier:(NSString *)identifier;
 
 // To measure code within one method or block, use this block-based method. You may not call this with another identifier active.
-// Do not pass your identifier to prepareToMeasureWithIdentifier: when using this method.
+// Do not pass your identifier to prepareToMeasureWithIdentifier: before using this method.
 
 - (void)measureBlock:(void (^)(void))measuredBlock withIdentifier:(NSString *)identifier;
 
-// These methods manage the results. You can use your own versioning/date-based logic to determine when to reset
-// the results for an identifier.
+// To record a measurement without recording an operation's duration, use recordUntimedMeasurement:forIdentifier: . You may
+// not call this with another identifier active. Do not pass your identifier to prepareToMeasureWithIdentifier: before using
+// this method.
+
+- (void)recordUntimedMeasurement:(CGFloat)measurement forIdentifier:(NSString *)identifier;
+
+// You can use your own versioning/date-based logic to determine when to reset the results for an identifier.
 
 - (void)discardPreviousResultsForIdentifier:(NSString *)identifier;
+
+// getNewestTimedMeasurementForIdentifier: and getNewestUntimedMeasurementForIdentifier: differ by return type.
+
 - (NSTimeInterval)getNewestTimedMeasurementForIdentifier:(NSString *)identifier;
-
-// recordUntimedMeasurement:forIdentifier: does not have any preconditions.
-
-- (void)recordUntimedMeasurement:(CGFloat)measurement forIdentifier:(NSString *)identifier; // BUG: not implemented
+- (CGFloat)getNewestUntimedMeasurementForIdentifier:(NSString *)identifier;
 
 @end

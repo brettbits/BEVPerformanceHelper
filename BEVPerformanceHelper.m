@@ -83,6 +83,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 
 #pragma mark Public interface - start and stop
 
+// BUG: A caller can possibly reuse an identifier by simply calling prepareToMeasureWithIdentifier: more than once
 - (void)prepareToMeasureWithIdentifier:(NSString *)identifier
 {
     if (![identifier isEqualToString:BEVIgnoredIdentifier]) {
@@ -91,12 +92,18 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
         } else if (nil != self.activeIdentifier) {
             [self assertNoAPICallDuringMeasurement];
         } else {
-            dispatch_once_t startOnceToken = 0;
-            dispatch_once_t stopOnceToken = 0;
-            [self.startOnceTokens setObject:[NSNumber numberWithLong:startOnceToken] forKey:identifier];
-            [self.stopOnceTokens setObject:[NSNumber numberWithLong:stopOnceToken] forKey:identifier];
-            
-            // BUG: concat identifier with bundle identifier to avoid collisions between app and framework
+            BOOL startTokenExists = [[self.startOnceTokens allKeys] containsObject:identifier];
+            BOOL stopTokenExists = [[self.stopOnceTokens allKeys] containsObject:identifier];
+            if (startTokenExists || stopTokenExists) {
+                [self assertReusingIdentifierNotAllowed:identifier];
+            } else {
+                dispatch_once_t startOnceToken = 0;
+                dispatch_once_t stopOnceToken = 0;
+                [self.startOnceTokens setObject:[NSNumber numberWithLong:startOnceToken] forKey:identifier];
+                [self.stopOnceTokens setObject:[NSNumber numberWithLong:stopOnceToken] forKey:identifier];
+                
+                // BUG: concat identifier with bundle identifier to avoid collisions between app and framework
+            }
         }
     }
 }
@@ -216,9 +223,47 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     return result;
 }
 
+- (CGFloat)getNewestUntimedMeasurementForIdentifier:(NSString *)identifier
+{
+    CGFloat result = CGFLOAT_MIN;
+    if (![identifier isEqualToString:BEVIgnoredIdentifier]) {
+        if (nil == identifier) {
+            [self assertNilIdentifierNotAllowed];
+        } else if (nil != self.activeIdentifier) {
+            [self assertNoAPICallDuringMeasurement];
+        } else {
+            [self beginAccessingFileDataWithIdentifier:identifier addIdentifierIfMissing:NO];
+            NSArray *results = [self.measurements objectForKey:identifier];
+            if (nil == results) {
+                [self endAccessingFileData];
+                [self assertNoMeasurementsForIdentifier:identifier];
+            } else {
+                if (results.count > 0) {
+#if defined(__LP64__) && __LP64__
+                    result = [(NSNumber *)[results lastObject] doubleValue];
+#else
+                    result = [(NSNumber *)[results lastObject] floatValue];
+#endif
+                }
+                [self endAccessingFileData];
+            }
+        }
+    }
+    return result;
+}
+
 - (void)recordUntimedMeasurement:(CGFloat)measurement forIdentifier:(NSString *)identifier
 {
-    // BUG: not implemented
+    if (![identifier isEqualToString:BEVIgnoredIdentifier]) {
+        if (nil == identifier) {
+            [self assertNilIdentifierNotAllowed];
+        } else if (nil != self.activeIdentifier) {
+            [self assertNoNestingForIdentifier:identifier];
+        } else {
+            [self prepareToMeasureWithIdentifier:identifier];
+            [self recordMeasurement:measurement forIdentifier:identifier];
+        }
+    }
 }
 
 #pragma mark File management
@@ -425,6 +470,11 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     [NSException raise:BEVIdentiferException format:@"You may not nest calls to startWithIdentifier: . Identifier \"%@\" passed while identifier \"%@\" is still active", identifier, self.activeIdentifier];
 }
 
+- (void)assertReusingIdentifierNotAllowed:(NSString *)identifier
+{
+    [NSException raise:BEVIdentiferException format:@"You may not pass the same identifier (%@) to prepareToMeasureWithIdentifier: more than once", identifier];
+}
+
 - (void)assertNoAPICallDuringMeasurement
 {
     [NSException raise:BEVInterruptedMeasurementException format:@"You may not call other BEVPerformanceHelper methods during an active measurement"];
@@ -438,3 +488,4 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 // TODO: timed and untimed measurements: same code path internally
 // TODO: add API versioning to the dictionary so old results are discarded or even better, partitioned
 // TODO: add optional exceptions for slowest/exceeds 2 std dev/exceeds 3 std dev/rejected
+// TODO: separate collections for timed and untimed measurements

@@ -1,5 +1,6 @@
 //
 //  BEVPerformanceHelperTest.m
+//  Freq Peek
 //
 //  Created by Brett Neely <sourcecode@bitsevolving.com> on 9/30/13.
 //  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
@@ -259,6 +260,30 @@
         NSLog(@"This log should not happen");
     } withIdentifier:blockIdentifier], @"");
     [self.ph stopWithIdentifier:identifier];
+}
+
+- (void)testRecordUntimedMeasurement
+{
+    NSString *identifier = [self uuid];
+    CGFloat expectedMeasurement = 0.35f;
+    XCTAssertNoThrow([self.ph recordUntimedMeasurement:expectedMeasurement forIdentifier:identifier], @"");
+    CGFloat actualMeasurement = [self.ph getNewestUntimedMeasurementForIdentifier:identifier];
+    XCTAssertEqual(expectedMeasurement, actualMeasurement, @"");
+}
+
+- (void)testRecordUntimedMeasurementWhileMeasurementActive
+{
+    NSString *id1 = [self uuid];
+    NSString *id2 = [self uuid];
+    [self.ph prepareToMeasureWithIdentifier:id1];
+    [self.ph startWithIdentifier:id1];
+    XCTAssertThrows([self.ph recordUntimedMeasurement:0.162f forIdentifier:id2], @"");
+    [self.ph stopWithIdentifier:id1];
+}
+
+- (void)testRecordUntimedMeasurementNilIdentifier
+{
+    XCTAssertThrows([self.ph recordUntimedMeasurement:0.2f forIdentifier:nil], @"");
 }
 
 @end
