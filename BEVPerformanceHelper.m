@@ -29,8 +29,8 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
 
 // Behaviors
 @property (nonatomic, readwrite) BOOL removeResultsExceedingTwoStdDevs;
-@property (nonatomic, readwrite) NSUInteger minimumResultsForEvaluation;
-@property (nonatomic, readwrite) NSUInteger numberOfResultsToPersist;
+@property (nonatomic, readwrite) NSInteger minimumResultsForEvaluation;
+@property (nonatomic, readwrite) NSInteger numberOfResultsToPersist;
 @property (nonatomic, readonly) BOOL useFileStorage;
 @end
 
@@ -174,7 +174,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
     }
 }
 
-- (void)measureBlock:(void (^)(void))measuredBlock withIdentifier:(NSString *)identifier
+- (void)measureWithIdentifier:(NSString *)identifier block:(void (^)(void))measuredBlock;
 {
     if (![identifier isEqualToString:BEVIgnoredIdentifier]) {
         if (nil == identifier) {
@@ -329,7 +329,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
                 [self assertNoMeasurementsForIdentifier:identifier];
             } else {
                 [results addObject:[NSNumber numberWithDouble:measurement]];
-                NSUInteger count = results.count;
+                NSInteger count = results.count;
                 if (count > self.numberOfResultsToPersist) {
                     // This code is not covered by unit testing
                     NSInteger difference = count - self.numberOfResultsToPersist;

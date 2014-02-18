@@ -19,9 +19,9 @@ NSString *someTest = @"someTest";
 
 // Measure the duration of a block
 NSString *someBlockTest = @"someBlockTest";
-[ph measureBlock^{
+[ph measureWithIdentifier:someBlockTest block^{
     // Your block goes here
-} withIdentifier:someBlockTest];
+}];
 
 NSTimeInterval t1 = [ph getNewestTimedMeasurementForIdentifier:someTest];
 NSTimeInterval t2 = [ph getNewestTimedMeasurementForIdentifier:someBlockTest];

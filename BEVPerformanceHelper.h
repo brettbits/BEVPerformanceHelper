@@ -37,7 +37,7 @@ extern NSString * const BEVIgnoredIdentifier;
 // To measure code within one method or block, use this block-based method. You may not call this with another identifier active.
 // Do not pass your identifier to prepareToMeasureWithIdentifier: before using this method.
 
-- (void)measureBlock:(void (^)(void))measuredBlock withIdentifier:(NSString *)identifier;
+- (void)measureWithIdentifier:(NSString *)identifier block:(void (^)(void))measuredBlock;
 
 // To record a measurement without recording an operation's duration, use recordUntimedMeasurement:forIdentifier: . You may
 // not call this with another identifier active. Do not pass your identifier to prepareToMeasureWithIdentifier: before using

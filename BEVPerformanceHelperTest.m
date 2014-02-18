@@ -234,9 +234,9 @@
     NSString *identifier = [self uuid];
 
     NSInteger delay = 2;
-    XCTAssertNoThrow([self.ph measureBlock:^(void) {
+    XCTAssertNoThrow([self.ph measureWithIdentifier:identifier block:^(void) {
         sleep(delay);
-    } withIdentifier:identifier], @"");
+    }], @"");
     
     NSTimeInterval result = [self.ph getNewestTimedMeasurementForIdentifier:identifier];
     XCTAssertTrue(result >= (NSTimeInterval)delay, @"");
@@ -244,9 +244,9 @@
 
 - (void)testMeasureBlockNilIdentifier
 {
-    XCTAssertThrows([self.ph measureBlock:^{
+    XCTAssertThrows([self.ph measureWithIdentifier:nil block:^(void) {
         NSLog(@"This log should not happen");
-    } withIdentifier:nil], @"");
+    }], @"");
 }
 
 - (void)testMeasureBlockWithNesting
@@ -255,9 +255,9 @@
     NSString *blockIdentifier = [self uuid];
     [self.ph prepareToMeasureWithIdentifier:identifier];
     [self.ph startWithIdentifier:identifier];
-    XCTAssertThrows([self.ph measureBlock:^{
+    XCTAssertThrows([self.ph measureWithIdentifier:blockIdentifier block:^{
         NSLog(@"This log should not happen");
-    } withIdentifier:blockIdentifier], @"");
+    }], @"");
     [self.ph stopWithIdentifier:identifier];
 }
 
