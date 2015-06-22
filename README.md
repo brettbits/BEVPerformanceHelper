@@ -19,7 +19,7 @@ NSString *someTest = @"someTest";
 
 // Measure the duration of a block
 NSString *someBlockTest = @"someBlockTest";
-[ph measureWithIdentifier:someBlockTest block^{
+[ph measureWithIdentifier:someBlockTest block:^{
     // Your block goes here
 }];
 
