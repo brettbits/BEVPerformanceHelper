@@ -5,6 +5,12 @@
 //  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
 //
 
+/*
+
+ Xcode Static Analyzer issue: [2017-06-21 with Xcode 8.3.3] The static analyzer will flag the usage of local variable 'onceToken' three times within this source file, as API Misuse. However, this usage is intentional as the tokens are backed by the startOnceTokens and stopOnceTokens dictionaries. At this time I am leaving the implementation as-is and not disabling these warnings. Comments are welcome at the email address at the top of this file.
+
+ */
+
 #import "BEVPerformanceHelper.h"
 
 NSString * const BEVIgnoredIdentifier = @"BEVIgnoredIdentifier";
@@ -416,7 +422,7 @@ NSString * const BEVInterruptedMeasurementException = @"BEVInterruptedMeasuremen
         
         if (self.nslogMeasurement) {
             NSTimeInterval newestResult = [(NSNumber *)[results lastObject] doubleValue];
-            NSLog(@"[%@] fastest:%.3f average:%.3f slowest:%.3f newest:%.3f stddev:%.3f", identifier, fastest, average, slowest, newestResult, stdDev);
+            NSLog(@"[%@] fastest:%.3f average:%.3f slowest:%.3f newest:%.3f stddev:%.3f resultCount:%ld", identifier, fastest, average, slowest, newestResult, stdDev, results.count);
         }
     }
 }

@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CGBase.h>
 
 // Nesting measurements is not supported. However, you have the option of using BEVIgnoredIdentifier to temporarily disable
 // a measurement, which allows you to insert nested calls in your code with only one pair of start/stop calls enabled.

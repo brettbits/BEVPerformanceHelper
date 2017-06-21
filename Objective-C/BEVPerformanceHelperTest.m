@@ -5,6 +5,7 @@
 //  Copyright (c) 2014 Bits Evolving LLC. Distributed under the MIT License -- see LICENSE file for details.
 //
 
+// If you see a build error regarding XCTest.h not found, check the target membership and ensure that this source file is only in your testing target(s)
 #import <XCTest/XCTest.h>
 
 #import "BEVPerformanceHelper_UnitTesting.h"
@@ -233,7 +234,7 @@
 {
     NSString *identifier = [self uuid];
 
-    NSInteger delay = 2;
+    unsigned int delay = 2;
     XCTAssertNoThrow([self.ph measureWithIdentifier:identifier block:^(void) {
         sleep(delay);
     }], @"");
