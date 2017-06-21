@@ -1,9 +1,9 @@
 BEVPerformanceHelper
 ====================
 
-Objective-C class for measuring and tracking performance (currently focused on time measurement)
+Objective-C (and soon, Swift) class for measuring and tracking performance (currently focused on time measurement)
 
-Example usage:
+Example Objective-C usage:
 
 ```
 
@@ -30,6 +30,12 @@ NSTimeInterval t2 = [ph getNewestTimedMeasurementForIdentifier:someBlockTest];
 NSString *recordCount = @"recordCount";
 [ph recordUntimedMeasurement:225.0 forIdentifier:recordCount];
 CGFloat theCount = [ph getNewestUntimedMeasurementForIdentifier:recordCount];
+```
+
+Example Swift usage:
+
+```
+// in progress
 ```
 
 Most recently tested with macOS 10.12.4; Xcode 8.3.3; iOS SDK 10.3
