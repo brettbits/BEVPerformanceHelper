@@ -32,5 +32,5 @@ NSString *recordCount = @"recordCount";
 CGFloat theCount = [ph getNewestUntimedMeasurementForIdentifier:recordCount];
 ```
 
-Tested with: OS X 10.9.1; Xcode 5.0.2; iOS SDK 7.0.4
+Most recently tested with macOS 10.12.4; Xcode 8.3.3; iOS SDK 10.3
 
