@@ -102,14 +102,14 @@ class PerformanceHelperTests: XCTestCase {
         ph.stopMeasuring(identifier: firstUUID)
     }
     
-    func testNilIdentifier() {
-        let uuid: String? = nil
-        XCTAssertThrowsError(ph.prepareToMeasure(identifier: uuid!))
-        XCTAssertThrowsError(ph.discardPreviousResults(identifier: uuid!))
-        XCTAssertThrowsError(ph.startMeasuring(identifier: uuid!))
-        XCTAssertThrowsError(ph.stopMeasuring(identifier: uuid!))
-        XCTAssertThrowsError(ph.getNewestTimedMeasurement(identifier: uuid!))
-    }
+//    func testNilIdentifier() {
+//        let uuid: String? = nil
+//        XCTAssertThrowsError(ph.prepareToMeasure(identifier: uuid!))
+//        XCTAssertThrowsError(ph.discardPreviousResults(identifier: uuid!))
+//        XCTAssertThrowsError(ph.startMeasuring(identifier: uuid!))
+//        XCTAssertThrowsError(ph.stopMeasuring(identifier: uuid!))
+//        XCTAssertThrowsError(ph.getNewestTimedMeasurement(identifier: uuid!))
+//    }
     
     func testNormalUsage() {
         let uuid: String = NSUUID().uuidString
@@ -221,97 +221,91 @@ class PerformanceHelperTests: XCTestCase {
         let result: TimeInterval = ph.getNewestTimedMeasurement(identifier: uuid)
         XCTAssertTrue(result >= Double(delay));
     }
+    
+//    func testMeasureClosureNilIdentifier() {
+//        let uuid: String? = nil
+//        XCTAssertThrowsError(ph.measureClosure(closure: {
+//            print("This log should not happen")
+//        }, withIdentifier: uuid!))
+//    }
+    
+    func testMeasureClosureInsideStartStop() {
+        let firstUUID: String = NSUUID().uuidString
+        let secondUUID: String = NSUUID().uuidString
+        
+        ph.prepareToMeasure(identifier: firstUUID)
+        ph.prepareToMeasure(identifier: secondUUID)
+        
+        ph.startMeasuring(identifier: firstUUID)
+        XCTAssertThrowsError(ph.measureClosure(closure: {
+            print("This log should not happen")
+        }, withIdentifier: secondUUID))
+        ph.stopMeasuring(identifier: firstUUID)
+    }
+    
+    func testMeasureClosureContainingStartStop() {
+        let firstUUID: String = NSUUID().uuidString
+        let secondUUID: String = NSUUID().uuidString
+        
+        ph.prepareToMeasure(identifier: firstUUID)
+        ph.prepareToMeasure(identifier: secondUUID)
+        
+        ph.measureClosure(closure: {
+            XCTAssertThrowsError(ph.startMeasuring(identifier: secondUUID))
+            ph.stopMeasuring(identifier: secondUUID)
+        }, withIdentifier: firstUUID)
+    }
+    
+    func testRecordUntimedMeasurement() {
+        let uuid: String = NSUUID().uuidString
+        var expectedMeasurement: Float = 0.35
+        XCTAssertNoThrow(ph.recordUntimedMeasurement(measurement: expectedMeasurement, forIdentifier: uuid))
+        let actualMeasurement = ph.getNewestUntimedMeasurement(identifier: uuid)
+        XCTAssertEqual(expectedMeasurement, actualMeasurement)
+    }
+    
+    func testRecordUntimedMeasurementWhileActivelyMeasuring() {
+        let firstUUID: String = NSUUID().uuidString
+        let secondUUID: String = NSUUID().uuidString
+        
+        ph.prepareToMeasure(identifier: firstUUID)
+        ph.startMeasuring(identifier: firstUUID)
+        XCTAssertThrowsError(ph.recordUntimedMeasurement(measurement: 0.162, forIdentifier: secondUUID))
+        ph.stopMeasuring(identifier: firstUUID)
+    }
+    
+//    func testRecordUntimedMeasurementNilIdentifier() {
+//        let uuid: String? = nil
+//        XCTAssertThrowsError(ph.recordUntimedMeasurement(measurement: 0.2, forIdentifier: uuid!))
+//    }
+    
+    func testGetNewestUntimed() {
+        let uuid: String = NSUUID().uuidString
+        let expectedResult: Float = 0.44
+        ph.recordUntimedMeasurement(measurement: expectedResult, forIdentifier: uuid)
+        var actualResult: Float = -1
+        XCTAssertNoThrow(actualResult = ph.getNewestUntimedMeasurement(identifier: uuid))
+        XCTAssertEqual(expectedResult, actualResult)
+    }
+    
+//    func testGetNewestUntimedWithNilIdentifier() {
+//        let uuid: String? = nil
+//        XCTAssertThrowsError(ph.getNewestUntimedMeasurement(identifier: uuid!))
+//    }
+    
+    func testGetNewestUntimedDuringMeasurement() {
+        let firstUUID: String = NSUUID().uuidString
+        let secondUUID: String = NSUUID().uuidString
+        
+        ph.prepareToMeasure(identifier: firstUUID)
+        ph.startMeasuring(identifier: firstUUID)
+        XCTAssertThrowsError(ph.getNewestUntimedMeasurement(identifier: secondUUID))
+        ph.stopMeasuring(identifier: firstUUID)
+    }
+    
+    func testGetNewestUntimedNoResults() {
+        let uuid: String = NSUUID().uuidString
+        XCTAssertThrowsError(ph.getNewestUntimedMeasurement(identifier: uuid))
+    }
 
 }
-
-/*
- 
- - (void)testMeasureBlock
- {
- NSString *identifier = [self uuid];
- 
- unsigned int delay = 2;
- XCTAssertNoThrow([self.ph measureWithIdentifier:identifier block:^(void) {
- sleep(delay);
- }], @"");
- 
- NSTimeInterval result = [self.ph getNewestTimedMeasurementForIdentifier:identifier];
- XCTAssertTrue(result >= (NSTimeInterval)delay, @"");
- }
- 
- - (void)testMeasureBlockNilIdentifier
- {
- XCTAssertThrows([self.ph measureWithIdentifier:nil block:^(void) {
- NSLog(@"This log should not happen");
- }], @"");
- }
- 
- - (void)testMeasureBlockWithNesting
- {
- NSString *identifier = [self uuid];
- NSString *blockIdentifier = [self uuid];
- [self.ph prepareToMeasureWithIdentifier:identifier];
- [self.ph startWithIdentifier:identifier];
- XCTAssertThrows([self.ph measureWithIdentifier:blockIdentifier block:^{
- NSLog(@"This log should not happen");
- }], @"");
- [self.ph stopWithIdentifier:identifier];
- }
- 
- - (void)testRecordUntimedMeasurement
- {
- NSString *identifier = [self uuid];
- CGFloat expectedMeasurement = 0.35f;
- XCTAssertNoThrow([self.ph recordUntimedMeasurement:expectedMeasurement forIdentifier:identifier], @"");
- CGFloat actualMeasurement = [self.ph getNewestUntimedMeasurementForIdentifier:identifier];
- XCTAssertEqual(expectedMeasurement, actualMeasurement, @"");
- }
- 
- - (void)testRecordUntimedMeasurementWhileMeasurementActive
- {
- NSString *id1 = [self uuid];
- NSString *id2 = [self uuid];
- [self.ph prepareToMeasureWithIdentifier:id1];
- [self.ph startWithIdentifier:id1];
- XCTAssertThrows([self.ph recordUntimedMeasurement:0.162f forIdentifier:id2], @"");
- [self.ph stopWithIdentifier:id1];
- }
- 
- - (void)testRecordUntimedMeasurementNilIdentifier
- {
- XCTAssertThrows([self.ph recordUntimedMeasurement:0.2f forIdentifier:nil], @"");
- }
- 
- - (void)testGetNewestUntimed
- {
- NSString *identifier = [self uuid];
- CGFloat expectedResult = 0.44f;
- [self.ph recordUntimedMeasurement:expectedResult forIdentifier:identifier];
- CGFloat actualResult = CGFLOAT_MIN;
- XCTAssertNoThrow(actualResult = [self.ph getNewestUntimedMeasurementForIdentifier:identifier], @"");
- XCTAssertEqual(expectedResult, actualResult, @"");
- }
- 
- - (void)testGetNewestUntimedNilIdentifier
- {
- XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:nil], @"");
- }
- 
- - (void)testGetNewestUntimedDuringMeasurement
- {
- NSString *id1 = [self uuid];
- NSString *id2 = [self uuid];
- [self.ph prepareToMeasureWithIdentifier:id1];
- [self.ph startWithIdentifier:id1];
- XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:id2], @"");
- [self.ph stopWithIdentifier:id1];
- }
- 
- - (void)testGetNewestUntimedNoResults
- {
- NSString *identifier = [self uuid];
- XCTAssertThrows([self.ph getNewestUntimedMeasurementForIdentifier:identifier], @"");
- }
- 
- @end
-*/
