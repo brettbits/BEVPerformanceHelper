@@ -47,9 +47,16 @@
     XCTAssertThrows([self.ph startWithIdentifier:identifier], @"");
 }
 
-- (void)testStopWithoutPrepareOrStart
+- (void)testStopWithoutPrepare
 {
     NSString *identifier = [self uuid];
+    XCTAssertThrows([self.ph stopWithIdentifier:identifier], @"");
+}
+
+- (void)testStopWithoutStart
+{
+    NSString *identifier = [self uuid];
+    [self.ph prepareToMeasureWithIdentifier:identifier];
     XCTAssertThrows([self.ph stopWithIdentifier:identifier], @"");
 }
 
@@ -73,13 +80,6 @@
     XCTAssertNoThrow([self.ph stopWithIdentifier:firstIdentifier], @"");
     XCTAssertNoThrow([self.ph startWithIdentifier:secondIdentifier], @"");
     XCTAssertNoThrow([self.ph stopWithIdentifier:secondIdentifier], @"");
-}
-
-- (void)testStopWithoutStart
-{
-    NSString *identifier = [self uuid];
-    [self.ph prepareToMeasureWithIdentifier:identifier];
-    XCTAssertThrows([self.ph stopWithIdentifier:identifier], @"");
 }
 
 - (void)testStopTwiceThrows
