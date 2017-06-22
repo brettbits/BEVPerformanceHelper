@@ -7,7 +7,9 @@
 
 import Foundation
 
-let ignoredIdentifier: String = "ignoredIdentifier"
+struct PHConstants {
+    static let ignoredIdentifier: String = "ignoredIdentifier"
+}
 
 enum PerformanceHelperError {
     case identifierError
@@ -57,7 +59,7 @@ class PerformanceHelper {
         
     }
     
-    func measureBlock(measuredBlock: (), withIdentifier identifier: String) {
+    func measureClosure(closure: () -> Void, withIdentifier identifier: String) {
         
     }
     
